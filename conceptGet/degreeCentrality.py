@@ -53,6 +53,17 @@ def readRelation(inputPath,relationForArr,relationBackArr,exclusiveIdStart):
             # 降重
             if start not in relationBackArr[end]:
                 relationBackArr[end].append(start)
+# 根据一级目录名字，找出其直接对应的所有子类
+def getSubConcepts(inputPath,nameId):
+    result = []
+    with open(inputPath, 'r', newline='', encoding='utf8') as file_read:  # 打开input_file指定的文件进行只读操作
+        file_reader = csv.reader(file_read)  # 通过csv的reader()方法读取文件
+        for row in file_reader:
+            start = row[0]
+            end = row[1]
+            if start == nameId:
+                result.append(end)
+    return result
 # 保存排序结果
 def saveSortResult(outputPath,result):
     with open(outputPath, 'w', encoding='utf-8', newline='') as f:
@@ -195,8 +206,9 @@ jsonData = json.load(open(url,encoding='utf-8'))
 isRequestConcepts = True
 isExclusive = True
 isUsePageRank = True
-isSave = True
+isSave = False
 isLimit = False
+isSaveSomeWords = True
 
 def generateG(relationForArr):
     pass
@@ -298,6 +310,11 @@ if __name__ == '__main__':
         saveRelationship(outputDictHyponymsPath, relationForArr)
         # 4.将所有标为词语的词都单独保存
         saveNodes(outputTermsPath, terms)
+    if isSaveSomeWords:
         # 5.将实体类都分别保存
         entytiesName = ['水利史', '水利科技']
+        baseOutputPath = '../output/java/'
+        for name in entytiesName:
+            result = getSubConcepts(levelRelUrl, name2id[name])
+            saveNodes(baseOutputPath + name + ".csv", result)
 
