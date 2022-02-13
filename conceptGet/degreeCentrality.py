@@ -282,7 +282,7 @@ if __name__ == '__main__':
                 print('请求失败，当前请求到:' + name)
                 isRequestConcepts = False
             elif '词语' in concepts:
-                terms.append(name)
+                terms.append(name2id[name])
 
     # 在获取上下位概念时就已经做了排除，此处废弃
     # hyponymsSets = removeNotIn(hyponymsSets,namesLexicon)
