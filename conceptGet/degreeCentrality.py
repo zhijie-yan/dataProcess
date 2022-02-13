@@ -264,12 +264,8 @@ if __name__ == '__main__':
     terms = []
     resultLimit = [id2name[res[0]] for res in result[:limit]]
     for ald in result[:limit]:
-        # concepts += getPreConcept(id2name[ald[0]])
         name = id2name[ald[0]]
         preSyn, nextSyn = getPreAndNextWord(name, resultLimit)
-        # print(id2name[ald[0]]+'的上下位词分别为：')
-        # print(preSyn)
-        # print(nextSyn)
         if len(preSyn) > 0:
             hypernymSets[name] = preSyn
         if len(nextSyn) > 0:
