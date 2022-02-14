@@ -24,6 +24,7 @@ avgOutPutList：出度平均
 """
 import json
 import csv
+import re
 import numpy as np
 from tools.pageRank2 import pageRank2
 from tools.pageRankTool import pageRank
@@ -203,11 +204,11 @@ url = '../data/process/水利大辞典-定义-整理数据.json'
 dictRelUrl = '../data/output/水利大辞典-关系-词条2定义.csv'
 levelRelUrl = '../data/output/水利大辞典-关系-下位.csv'
 jsonData = json.load(open(url,encoding='utf-8'))
-isRequestConcepts = True
+isRequestConcepts = False
 isExclusive = True
 isUsePageRank = True
 isSave = False
-isLimit = False
+isLimit = True
 isSaveSomeWords = True
 
 def generateG(relationForArr):
@@ -253,23 +254,42 @@ if __name__ == '__main__':
         G = generateG(relationForArr)
         result = leaderrank(G)
     resultName = [id2name[index[0]] for index in result]
-    print(resultName)
+    # print(resultName)
     # 获取前k个词条对应的概念集
     hypernymSets = {}  # 上位词集合
     hyponymsSets = {}  # 下位词集合
+    sameSets = {}  # 同义词集合
+    sameMeansDict = {} # 同义词典
     if isLimit:
         limit = 500
     else:
         limit = len(result)
     terms = []
-    resultLimit = [id2name[res[0]] for res in result[:limit]]
+    attachWords = {}
+    sameDict = {}
+    sortNamesLimit = [id2name[res[0]] for res in result[:limit]]
+
     for ald in result[:limit]:
         name = id2name[ald[0]]
-        preSyn, nextSyn = getPreAndNextWord(name, resultLimit)
+        preSyn, nextSyn,sameSyn,sameDictItems = getPreAndNextWord(name, sortNamesLimit)
+        for sd in sameDictItems:
+            if sd not in sameDict:
+                sameDict[sd] = sameDictItems[sd]
+            else:
+                sameDict[sd].union(sameDictItems[sd])
         if len(preSyn) > 0:
             hypernymSets[name] = preSyn
         if len(nextSyn) > 0:
             hyponymsSets[name] = nextSyn
+        if len(sameSyn) > 0:
+            sameSets[name] = sameSyn
+
+        # 数据处理
+        for p in preSyn:
+            if p not in attachWords:
+                attachWords[p] = 1
+            else:
+                attachWords[p] += 1
 
         if isRequestConcepts:
             print(name)
@@ -279,14 +299,56 @@ if __name__ == '__main__':
                 isRequestConcepts = False
             elif '词语' in concepts:
                 terms.append(name2id[name])
+        # 筛选是否有同义词  即“.*”
+        pattern = re.compile(r'即\“.*\”')
+        otherNamePattern = pattern.match(name2Definition[name])
+        if otherNamePattern != None:
+            end = otherNamePattern.end()
+            otherName = otherNamePattern.group(0)[2:end-1]
+            if otherName in sortNamesLimit:
+                # print(str(name) + '的同义词是：' + str(otherName))
+                sameMeansDict[name] = [otherName]
 
-    # 在获取上下位概念时就已经做了排除，此处废弃
-    # hyponymsSets = removeNotIn(hyponymsSets,namesLexicon)
-    # hypernymSets = removeNotIn(hypernymSets,namesLexicon)
-    print('上位词：' + str(len(hypernymSets)))
+
+
     print(hypernymSets)
-    print('下位词：' + str(len(hyponymsSets)))
-    print(hyponymsSets)
+    """
+    sortNamesLimit：节点重要性排序
+    hypernymSets：上位词map
+    hyponymsSets：下位词map
+    sameDict：同义词map
+    attachWords：上位词中出现，而词典中未出现的词map，统计每个词出现次数
+    找传递关系：
+    原词条--->上位词--->另一原词条
+    """
+    # 找传递关系---不存在传递关系
+    # for pre in hypernymSets:
+    #     for pname in hypernymSets[pre]:
+    #         if pname in sameDict:
+    #             for hypernymName in sameDict[pname]:
+    #                 preSynTemp,_,_,_ = getPreAndNextWord(hypernymName,resultName)
+    #                 print("-------------------------")
+    #                 print(preSynTemp)
+    #                 print("-------------------------")
+    #                 for pst in preSynTemp:
+    #                     if pst in sortNamesLimit:
+    #                         print("-----------111--------------")
+
+    # 可添加的词
+    realAttachWords = []
+    for asw in attachWords:
+        if attachWords[asw] > 1:
+            realAttachWords.append(asw)
+    print(realAttachWords)
+    # 同义词整理
+    for snl in sameSets:
+        someSameMeanWords = sameSets[snl]
+        for ssmw in someSameMeanWords:
+            if ssmw in sortNamesLimit:
+                # print(str(snl)+'的同义词是：'+str(ssmw))
+                if ssmw not in sameMeansDict:
+                    sameMeansDict[snl] = [ssmw]
+    print(sameMeansDict)
     if isSave:
         # 导出路径
         outputSortWordPath = '../output/java/sortWord.csv'
@@ -295,17 +357,20 @@ if __name__ == '__main__':
         outputHyponymsPath = '../output/java/hyponyms.csv'
         outputDictHyponymsPath = '../output/java/dictHyponyms.csv'
         outputTermsPath = '../output/java/terms.csv'
+        outputSameMeansPath = '../output/java/sameMeans.csv'
         # 保存时也要按照id来，这样才好保持唯一性，因此还要额外保存一个对应的词典，或者直接让java去读json文件
         # 1.排序词条
         sortWord = [res[0] for res in result]
         saveNodes(outputSortWordPath, sortWord)
         # 2.上下位关系
-        saveRelationshipAsId(outputHypernymPath, hypernymSets)
-        saveRelationshipAsId(outputHyponymsPath, hyponymsSets)
+        # saveRelationshipAsId(outputHypernymPath, hypernymSets)
+        # saveRelationshipAsId(outputHyponymsPath, hyponymsSets)
         # 3.词典中的下位关系
         saveRelationship(outputDictHyponymsPath, relationForArr)
         # 4.将所有标为词语的词都单独保存
         saveNodes(outputTermsPath, terms)
+        # 5.保存同义词集
+        saveRelationship(outputSameMeansPath,sameMeansDict)
     if isSaveSomeWords:
         # 5.将实体类都分别保存
         entytiesName = ['水利史', '水利科技']
