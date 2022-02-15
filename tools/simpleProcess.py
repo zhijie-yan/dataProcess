@@ -12,6 +12,7 @@ outputSciStartName = '../output/java/水利科技-组织机构.csv'
 outputSciEndName = '../output/java/水利科技-人名.csv'
 outputTerms = '../output/java/termIds.csv'
 outputSortWords = '../output/java/排序词条.csv'
+outputRiver = '../output/java/河流沟渠.csv'
 
 jsonData = json.load(open(jsonUrl,encoding='utf-8'))
 
@@ -63,7 +64,8 @@ def getNameFromHistory():
     historyIds = getData(hisUrl)
     historyNames = [id2name[id] for id in historyIds]
     print(historyNames)
-    saveStartNodes(outputHisName,historyNames,'管子')
+    # saveStartNodes(outputHisName,historyNames,'管子')
+    saveEndNodes(outputRiver,historyNames,'京杭运河')
 
 
 def getNameFromSci():
@@ -97,6 +99,6 @@ if __name__ == '__main__':
         name2Definition[data['name']] = data['context']
 
     # transferTerms()
-    # getNameFromHistory()
+    getNameFromHistory()
     # getNameFromSci()
-    getSortNames()
+    # getSortNames()

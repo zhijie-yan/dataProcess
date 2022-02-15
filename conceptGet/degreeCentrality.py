@@ -25,6 +25,8 @@ avgOutPutList：出度平均
 import json
 import csv
 import re
+
+import networkx as nx
 import numpy as np
 from tools.pageRank2 import pageRank2
 from tools.pageRankTool import pageRank
@@ -206,14 +208,27 @@ levelRelUrl = '../data/output/水利大辞典-关系-下位.csv'
 jsonData = json.load(open(url,encoding='utf-8'))
 isRequestConcepts = False
 isExclusive = True
-isUsePageRank = True
+isUsePageRank = False
 isSave = False
 isLimit = True
 isSaveSomeWords = True
 
 def generateG(relationForArr):
-    pass
+    nodes = []
+    edges = []
+    for start in relationForArr:
+        for end in relationForArr[start]:
+            if start not in nodes:
+                nodes.append(start)
+            if end not in nodes:
+                nodes.append(end)
+            edge = (start,end)
+            edges.append(edge)
+    graph = nx.DiGraph()
 
+    graph.add_nodes_from(nodes)
+    graph.add_edges_from(edges)
+    return graph
 
 if __name__ == '__main__':
     # 读取数据阶段
@@ -247,7 +262,7 @@ if __name__ == '__main__':
     if isUsePageRank:
         # 调用pageRank
         result = usePageRank2(relationForArr)
-        # leaderrank(G)
+        # result = usePageRank2(relationBackArr)
         # 调用度中心性算法
         # result =  useDegreeCentrality(relationForArr,relationBackArr)
     else:
@@ -370,7 +385,7 @@ if __name__ == '__main__':
         # 4.将所有标为词语的词都单独保存
         saveNodes(outputTermsPath, terms)
         # 5.保存同义词集
-        saveRelationship(outputSameMeansPath,sameMeansDict)
+        saveRelationshipAsId(outputSameMeansPath,sameMeansDict)
     if isSaveSomeWords:
         # 5.将实体类都分别保存
         entytiesName = ['水利史', '水利科技']

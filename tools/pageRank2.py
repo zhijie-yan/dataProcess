@@ -72,7 +72,7 @@ def pageRank2(path):
         e = max(map(abs, e))  # 计算误差
         P_n = P_n1
         k += 1
-        # print('iteration %s:' % str(k), P_n1)
+        print('iteration %s:' % str(k), P_n1)
     result = {}
     for index in range(N):
         result[num_to_node[index]] = P_n[index]
