@@ -209,24 +209,23 @@ jsonData = json.load(open(url,encoding='utf-8'))
 isRequestConcepts = False
 isExclusive = True
 isUsePageRank = False
-isSave = False
+isSave = True
 isLimit = True
-isSaveSomeWords = True
+isSaveSomeWords = False
 
 def generateG(relationForArr):
-    nodes = []
+    # nodes = []
     edges = []
     for start in relationForArr:
         for end in relationForArr[start]:
-            if start not in nodes:
-                nodes.append(start)
-            if end not in nodes:
-                nodes.append(end)
+            # if start not in nodes:
+            #     nodes.append(start)
+            # if end not in nodes:
+            #     nodes.append(end)
             edge = (start,end)
             edges.append(edge)
     graph = nx.DiGraph()
-
-    graph.add_nodes_from(nodes)
+    # graph.add_nodes_from(nodes)
     graph.add_edges_from(edges)
     return graph
 
@@ -251,14 +250,27 @@ if __name__ == '__main__':
     if isExclusive:
         # 排除一些概念
         exclusiveNameStart = ['地质', '工程力学', '水力学', '河流动力学', '土力学', '岩石力学', '给水排水工程', '海洋水文学与海岸动力学', '港口', '航道', '河口', '海岸',
-                              '生态水利', '水利管理', '水利科技']
+                              '生态水利', '水利管理', '水利科技','水利经济']
         exclusiveIdStart = [name2id[name] for name in exclusiveNameStart]
         exclusives = getExclusiveIds(levelRelUrl, exclusiveIdStart)
 
     # 读入边数据
     readRelation(dictRelUrl, relationForArr, relationBackArr, exclusives)
     readRelation(levelRelUrl, relationForArr, relationBackArr, exclusives)
-
+    # 计算强相关边
+    numRel = {}
+    for ref in relationForArr:
+        start = ref
+        for end in relationForArr[ref]:
+            strNewName = str(id2name[start])+'---'+str(id2name[end])
+            strNewNameReverse = str(id2name[end])+'---'+str(id2name[start])
+            if strNewName in numRel:
+                numRel[strNewName] += 1
+            elif strNewNameReverse in numRel:
+                numRel[strNewNameReverse] += 1
+            else:
+                numRel[strNewName] = 1
+    print(sorted(numRel.items(), key=lambda x: x[1], reverse=True))
     if isUsePageRank:
         # 调用pageRank
         result = usePageRank2(relationForArr)
@@ -367,6 +379,7 @@ if __name__ == '__main__':
     if isSave:
         # 导出路径
         outputSortWordPath = '../output/java/sortWord.csv'
+        outputSortWordLimitPath = '../output/java/排序词条.csv'
         outputEntytiesPath = '../output/java/entyties'
         outputHypernymPath = '../output/java/hypernym.csv'
         outputHyponymsPath = '../output/java/hyponyms.csv'
@@ -377,6 +390,7 @@ if __name__ == '__main__':
         # 1.排序词条
         sortWord = [res[0] for res in result]
         saveNodes(outputSortWordPath, sortWord)
+        saveNodes(outputSortWordLimitPath, resultName)
         # 2.上下位关系
         # saveRelationshipAsId(outputHypernymPath, hypernymSets)
         # saveRelationshipAsId(outputHyponymsPath, hyponymsSets)

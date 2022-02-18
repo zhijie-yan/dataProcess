@@ -6,6 +6,7 @@ termUrl = '../output/java/terms.csv'
 hisUrl = '../output/java/水利史.csv'
 sciUrl = '../output/java/水利科技.csv'
 sortUrl = '../output/java/sortWord.csv'
+relUrl = '../output/水利大辞典-关系-词条2定义.csv'
 
 outputHisName = '../output/java/水利史-人名.csv'
 outputSciStartName = '../output/java/水利科技-组织机构.csv'

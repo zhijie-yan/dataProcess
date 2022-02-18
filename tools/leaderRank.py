@@ -15,6 +15,7 @@ def leaderrank(graph):
     graph.add_node('-1')
     for node in nodes:
         graph.add_edge('-1', node)
+        graph.add_edge(node, '-1')
     # LR值初始化
     LR = dict.fromkeys(nodes, 1.0)
     LR['-1'] = 0.0
@@ -24,19 +25,22 @@ def leaderrank(graph):
         tempLR = {}
         for node1 in graph.nodes():
             s = 0.0
+            # for node2 in graph.nodes():
+            #     if node2 in graph.neighbors(node1):
+            #         s += 1.0 / graph.degree([node2])[node2] * LR[node2]
             for node2 in graph.nodes():
-                if node2 in graph.neighbors(node1):
-                    s += 1.0 / graph.degree([node2])[node2] * LR[node2]
+                if node1 in graph.neighbors(node2):
+                    s += (1.0 / graph.out_degree()[node2]) * LR[node2]
             tempLR[node1] = s
-        print('当前是第%s轮迭代',k)
+        print('当前是第%s轮迭代'%k)
         # print(tempLR)
         # 终止条件:LR值不在变化
         error = 0.0
         for n in tempLR.keys():
             error += abs(tempLR[n] - LR[n])
-        if error == 0.0:
+        if error <= 0.000000001:
             break
-        print('当前轮error为：%s',error)
+        print('当前轮error为：%s'%error)
         LR = tempLR
         k += 1
     # 节点g的LR值平均分给其它的N个节点并且删除节点
@@ -44,8 +48,9 @@ def leaderrank(graph):
     LR.pop('-1')
     for k in LR.keys():
         LR[k] += avg
-    print(LR)
-    return LR
+    # print(LR)
+    # return LR
+    return sorted(LR.items(), key=lambda x: x[1], reverse=True)
 
 
 # if __name__ == "__main__":

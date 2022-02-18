@@ -11,16 +11,12 @@
 3.使用pagerank算法，找出重要的概念作为本体概念
 """
 import json
+import re
 from ltp import LTP
-
-def get_index(lst=None, item=''):
-    return [index for (index,value) in enumerate(lst) if value == item]
-
-
-ltp = LTP()
 
 url = '../data/process/水利大辞典-定义-整理数据.json'
 output = '../output/水利大辞典-关系-词条2定义.csv'
+outputMerge = '../output/水利大辞典-关系-一对多关系.csv'
 jsonData = json.load(open(url,encoding='utf-8'))
 
 # 读取数据阶段
@@ -28,31 +24,91 @@ name2id = {}
 name2Definition = {}
 namesLexicon = []
 
-for data in jsonData:
-    namesLexicon.append(data['name'])
-    name2id[data['name']] = data['id']
-    name2Definition[data['name']] = data['context']
-# 数据处理阶段
-ltp.add_words(words=namesLexicon)
 num = 0
 relArr = []
-for d in name2Definition:
-    # print(d,name2Definition[d])
-    string = name2Definition[d]
-    # 分词
-    segment, hidden = ltp.seg([string])
-    # 词性标注
-    pos = ltp.pos(hidden)
-    indexs = get_index(pos[0],'n')
-    for index in indexs:
-        if segment[0][index] in namesLexicon:
-            num += 1
-            # print(segment[0][index])
-            rel = [name2id[d],name2id[segment[0][index]]]
-            relArr.append(rel)
-# 新创建的关系都在relArr当中，需要将其写入文件中
-with open(output, 'w', encoding='utf-8', newline='') as f:
-    for rel in relArr:
-        f.write( str(rel[0]) + ',' + str(rel[1]) + '\n')
+relMerge = []
+wordNumDict = {}
+
+def get_index(lst=None, item=''):
+    return [index for (index,value) in enumerate(lst) if value == item]
+
+
+def computeWordNum():
+    for d in name2Definition:
+        for name in namesLexicon:
+            if name in d and name != d:
+                print(str(name)+'------>'+str(d))
+                rel = [name,d]
+                relMerge.append(rel)
+                if name not in wordNumDict:
+                    wordNumDict[name] = 0
+                wordNumDict[name] += 1
+
+
+def extractRelationships():
+    for d in name2Definition:
+        # print(d,name2Definition[d])
+        string = name2Definition[d]
+        # 分词
+        segment, hidden = ltp.seg([string])
+        # 词性标注
+        pos = ltp.pos(hidden)
+        indexs = get_index(pos[0], 'n')
+
+        for index in indexs:
+            name = segment[0][index]
+            if name in namesLexicon:
+                if name in wordNumDict and d in wordNumDict:
+                    if wordNumDict[name] > wordNumDict[d]:
+                        rel = [name2id[name], name2id[d]]
+                    else:
+                        rel = [name2id[d], name2id[name]]
+                elif name in wordNumDict:
+                    rel = [name2id[name], name2id[d]]
+                else:
+                    rel = [name2id[d], name2id[name]]
+                relArr.append(rel)
+    print(relArr)
+    print('----------------------------------------')
+    print(relMerge)
+    print('----------------------------------------')
+    print(wordNumDict)
+
+def getEqualWords():
+    result = {}
+    # 筛选同义词
+    for name in name2Definition:
+        pattern = re.compile(r'^亦称\“.*?\”。')
+        someStrs = pattern.match(name2Definition[name])
+        if someStrs != None:
+            otherNames = []
+            equalWordsArr = re.findall(r'“(.*?)”', someStrs.group(0))
+            for equalWord in equalWordsArr:
+                # print(str(name)+'亦称：'+equalWord)
+                otherNames.append(equalWord)
+            result[name] = otherNames
+    return result
+
+def save(outputPath,relArrTemp):
+    # 新创建的关系都在relArr当中，需要将其写入文件中
+    with open(outputPath, 'w', encoding='utf-8', newline='') as f:
+        for rel in relArrTemp:
+            f.write(str(rel[0]) + ',' + str(rel[1]) + '\n')
+
+if __name__ == '__main__':
+    ltp = LTP()
+
+    for data in jsonData:
+        namesLexicon.append(data['name'])
+        name2id[data['name']] = data['id']
+        name2Definition[data['name']] = data['context']
+    # 数据处理阶段 添加词典
+    ltp.add_words(words=namesLexicon)
+
+    # computeWordNum()
+    # extractRelationships()
+    print(getEqualWords())
+    # save(output,relArr)
+    # save(outputMerge,relMerge)
 
 
