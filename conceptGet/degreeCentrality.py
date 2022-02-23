@@ -35,7 +35,13 @@ from tools.requestKGWork import getPreConcept
 from tools.wordnetTest import getPreAndNextWord
 
 # 读取边数据
+from waterDict.extractRelation import getAllRel
+
+
 def readRelation(inputPath,relationForArr,relationBackArr,exclusiveIdStart):
+    """
+    由路径，要排除的一级目录名称读出关系
+    """
     with open(inputPath, 'r', newline='', encoding='utf8') as file_read:  # 打开input_file指定的文件进行只读操作
         file_reader = csv.reader(file_read)  # 通过csv的reader()方法读取文件
         for row in file_reader:
@@ -56,8 +62,13 @@ def readRelation(inputPath,relationForArr,relationBackArr,exclusiveIdStart):
             # 降重
             if start not in relationBackArr[end]:
                 relationBackArr[end].append(start)
-# 根据一级目录名字，找出其直接对应的所有子类
+
 def getSubConcepts(inputPath,nameId):
+    """
+    根据一级目录名字，找出其直接对应的所有子类
+    @param inputPath: 输入路径
+    @param nameId: 名字id
+    """
     result = []
     with open(inputPath, 'r', newline='', encoding='utf8') as file_read:  # 打开input_file指定的文件进行只读操作
         file_reader = csv.reader(file_read)  # 通过csv的reader()方法读取文件
@@ -67,30 +78,57 @@ def getSubConcepts(inputPath,nameId):
             if start == nameId:
                 result.append(end)
     return result
-# 保存排序结果
+
 def saveSortResult(outputPath,result):
+    """
+    保存排序结果
+    @param outputPath: 保存路径
+    @param result: id列表
+    """
     with open(outputPath, 'w', encoding='utf-8', newline='') as f:
         for res in result:
             f.write(id2name[res[0]] + '\n')
-# 保存关系字典
+
 def saveRelationship(outputPath,relationForArr):
+    """
+    保存关系字典
+    @param outputPath:路径
+    @param relationForArr: 关系字典
+    """
     with open(outputPath, 'w', encoding='utf-8', newline='') as f:
         for rel in relationForArr:
             for val in relationForArr[rel]:
-                f.write(rel + ',' + val + '\n')
-# 保存节点list
+                f.write(str(rel) + ',' + str(val) + '\n')
+
 def saveNodes(outputPath,nodes):
+    """
+    保存节点list
+    @param outputPath: 输出路径
+    @param nodes: 节点列表
+    @return: 保存
+    """
     with open(outputPath, 'w', encoding='utf-8', newline='') as f:
         for node in nodes:
-            f.write(node + '\n')
-# 保存关系
+            f.write(str(node) + '\n')
+
 def saveRelationshipAsId(outputPath,relationships):
+    """
+    保存关系 由name转id
+    @param outputPath: 输出路径
+    @param relationships: 关系列表
+    """
     with open(outputPath, 'w', encoding='utf-8', newline='') as f:
         for rel in relationships:
             for val in relationships[rel]:
                 f.write(name2id[rel] + ',' + name2id[val] + '\n')
-# 根据词条小标题排除所有以其为起点的节点
+
 def getExclusiveIds(levelRelUrl, exclusiveIdStart):
+    """
+    根据词条小标题排除所有以其为起点的节点
+    @param levelRelUrl: 水利词典原本存在的上下位关系
+    @param exclusiveIdStart: 起始节点列表
+    @return: 要排除的所有节点名字
+    """
     exclusives = []
     with open(levelRelUrl, 'r', newline='', encoding='utf8') as file_read:
         file_reader = csv.reader(file_read)
@@ -100,8 +138,12 @@ def getExclusiveIds(levelRelUrl, exclusiveIdStart):
             if start in exclusiveIdStart:
                 exclusives.append(end)
     return exclusives
-# 根据关系字典获得矩阵
+
 def getMatrix(relationForArr,relationBackArr,keys):
+    """
+    根据关系字典获得矩阵
+    测试版本，失败，不再考虑
+    """
     n = len(keys)
     G1 = [[0]*n for i in range(n)]
     id2index = {}
@@ -122,8 +164,14 @@ def getMatrix(relationForArr,relationBackArr,keys):
         #     for lb in listBack:
         #         G1[id2index[lb]][id2index[key]] = 1
     return np.array(G1),n
-# 根据关系字典获得所有节点名称
+
 def getKeys(relationForArr,relationBackArr):
+    """
+    根据关系字典获得所有节点名称
+    @param relationForArr:正向字典
+    @param relationBackArr: 逆向字典
+    @return: 字典中存在的所有节点
+    """
     keys = []  # 过滤后剩余的词条key
     for rr in relationForArr:
         keys.append(rr)
@@ -131,8 +179,14 @@ def getKeys(relationForArr,relationBackArr):
         if rb not in keys:
             keys.append(rb)
     return keys
-# 使用度中心性算法计算节点重要程度
+
 def useDegreeCentrality(relationForArr,relationBackArr):
+    """
+    使用度中心性算法计算节点重要程度
+    @param relationForArr: 正向关系字典
+    @param relationBackArr: 逆向关系字典
+    @return: 排序结果
+    """
     numInputList = {}  # 入度计算
     numOutputList = {}  # 出度计算
     avgInputList = {}
@@ -166,23 +220,40 @@ def useDegreeCentrality(relationForArr,relationBackArr):
     # saveRes(outputPath+'入度排序2.csv',inDegree)
     # saveRes(outputPath+'综合排序2.csv',allDegree)
     return allDegree
-# 使用V1的pageRank算法
+
 def usePageRank1(relationForArr,relationBackArr):
+    """
+    使用V1的pageRank算法
+    @param relationForArr:正向关系
+    @param relationBackArr: 逆向关系
+    @return: 排序结果，此版本不成立
+    """
     keys = getKeys(relationForArr, relationBackArr)
     # 启用pagerank
     G, n = getMatrix(relationForArr, relationBackArr, keys)
     # 存在不收敛甚至一直变大的问题
     print(pageRank(G,s=0.85))
-# 使用V2的pageRank算法
+
 def usePageRank2(relationForArr):
+    """
+    使用V2的pageRank算法
+    @param relationForArr:关系列表
+    @return: 排序结果，包含两列，id和分数
+    """
     # 写出relationForArr
     outPathArr = '../output/relationships.txt'
     saveRelationship(outPathArr, relationForArr)
     # 调用pageRank
     result = pageRank2(outPathArr)
     return result
-# 移除上下位结果里所有需要排除的词条
+
 def removeNotIn(hySets,namesLexicon):
+    """
+    移除上下位结果里所有需要排除的词条
+    @param hySets: 上下位单词集合
+    @param namesLexicon: 单词列表
+    @return: 排除不在nameLexicon内的单词
+    """
     delList = []
     for hy in hySets:
         hyList = hySets[hy]
@@ -201,92 +272,28 @@ def removeNotIn(hySets,namesLexicon):
         hySets.pop(d)
     return hySets
 
-
-url = '../data/process/水利大辞典-定义-整理数据.json'
-dictRelUrl = '../data/output/水利大辞典-关系-词条2定义.csv'
-levelRelUrl = '../data/output/水利大辞典-关系-下位.csv'
-jsonData = json.load(open(url,encoding='utf-8'))
-isRequestConcepts = False
-isExclusive = True
-isUsePageRank = False
-isSave = True
-isLimit = True
-isSaveSomeWords = False
-
 def generateG(relationForArr):
-    # nodes = []
+    """
+    生成调用leaderrank算法所用图节点
+    @param relationForArr:
+    @return:
+    """
     edges = []
     for start in relationForArr:
         for end in relationForArr[start]:
-            # if start not in nodes:
-            #     nodes.append(start)
-            # if end not in nodes:
-            #     nodes.append(end)
             edge = (start,end)
             edges.append(edge)
     graph = nx.DiGraph()
-    # graph.add_nodes_from(nodes)
     graph.add_edges_from(edges)
     return graph
 
-if __name__ == '__main__':
-    # 读取数据阶段
-    # 读节点 构造id和name互相映射
-    name2id = {}
-    id2name = {}
-    name2Definition = {}
-    namesLexicon = []
-
-    for data in jsonData:
-        namesLexicon.append(data['name'])
-        name2id[data['name']] = str(data['id'])
-        id2name[str(data['id'])] = data['name']
-        name2Definition[data['name']] = data['context']
-
-    # 定义
-    relationForArr = {}  # 出度节点字典
-    relationBackArr = {}  # 入度节点字典
-    exclusives = []
-    if isExclusive:
-        # 排除一些概念
-        exclusiveNameStart = ['地质', '工程力学', '水力学', '河流动力学', '土力学', '岩石力学', '给水排水工程', '海洋水文学与海岸动力学', '港口', '航道', '河口', '海岸',
-                              '生态水利', '水利管理', '水利科技','水利经济']
-        exclusiveIdStart = [name2id[name] for name in exclusiveNameStart]
-        exclusives = getExclusiveIds(levelRelUrl, exclusiveIdStart)
-
-    # 读入边数据
-    readRelation(dictRelUrl, relationForArr, relationBackArr, exclusives)
-    readRelation(levelRelUrl, relationForArr, relationBackArr, exclusives)
-    # 计算强相关边
-    numRel = {}
-    for ref in relationForArr:
-        start = ref
-        for end in relationForArr[ref]:
-            strNewName = str(id2name[start])+'---'+str(id2name[end])
-            strNewNameReverse = str(id2name[end])+'---'+str(id2name[start])
-            if strNewName in numRel:
-                numRel[strNewName] += 1
-            elif strNewNameReverse in numRel:
-                numRel[strNewNameReverse] += 1
-            else:
-                numRel[strNewName] = 1
-    print(sorted(numRel.items(), key=lambda x: x[1], reverse=True))
-    if isUsePageRank:
-        # 调用pageRank
-        result = usePageRank2(relationForArr)
-        # result = usePageRank2(relationBackArr)
-        # 调用度中心性算法
-        # result =  useDegreeCentrality(relationForArr,relationBackArr)
-    else:
-        G = generateG(relationForArr)
-        result = leaderrank(G)
-    resultName = [id2name[index[0]] for index in result]
+def getPreAndNextWords(limit=500):
     # print(resultName)
     # 获取前k个词条对应的概念集
     hypernymSets = {}  # 上位词集合
     hyponymsSets = {}  # 下位词集合
     sameSets = {}  # 同义词集合
-    sameMeansDict = {} # 同义词典
+    sameMeansDict = {}  # 同义词典
     if isLimit:
         limit = 500
     else:
@@ -298,7 +305,7 @@ if __name__ == '__main__':
 
     for ald in result[:limit]:
         name = id2name[ald[0]]
-        preSyn, nextSyn,sameSyn,sameDictItems = getPreAndNextWord(name, sortNamesLimit)
+        preSyn, nextSyn, sameSyn, sameDictItems = getPreAndNextWord(name, sortNamesLimit)
         for sd in sameDictItems:
             if sd not in sameDict:
                 sameDict[sd] = sameDictItems[sd]
@@ -326,19 +333,66 @@ if __name__ == '__main__':
                 isRequestConcepts = False
             elif '词语' in concepts:
                 terms.append(name2id[name])
-        # 筛选是否有同义词  即“.*”
-        pattern = re.compile(r'即\“.*\”')
-        otherNamePattern = pattern.match(name2Definition[name])
-        if otherNamePattern != None:
-            end = otherNamePattern.end()
-            otherName = otherNamePattern.group(0)[2:end-1]
-            if otherName in sortNamesLimit:
-                # print(str(name) + '的同义词是：' + str(otherName))
-                sameMeansDict[name] = [otherName]
-
-
 
     print(hypernymSets)
+
+url = '../data/process/水利大辞典-定义-整理数据.json'
+dictRelUrl = '../data/output/水利大辞典-关系-词条2定义.csv'
+levelRelUrl = '../data/output/水利大辞典-关系-下位.csv'
+jsonData = json.load(open(url,encoding='utf-8'))
+isRequestConcepts = False
+isExclusive = True
+isUsePageRank = True
+# 0:degreeCentrality 1:pageRank 2:leaderRank
+useAlgorithms = 2
+isSave = True
+isLimit = True
+isSaveSomeWords = False
+
+# 初始化参数
+name2id = {}
+id2name = {}
+name2Definition = {}
+namesLexicon = []
+
+for data in jsonData:
+    namesLexicon.append(data['name'])
+    name2id[data['name']] = str(data['id'])
+    id2name[str(data['id'])] = data['name']
+    name2Definition[data['name']] = data['context']
+
+if __name__ == '__main__':
+    # 定义
+    relationForArr = {}  # 出度节点字典
+    relationBackArr = {}  # 入度节点字典
+    exclusives = []
+    if isExclusive:
+        # 排除一些概念
+        exclusiveNameStart = ['地质', '工程力学', '水力学', '河流动力学', '土力学', '岩石力学', '给水排水工程', '海洋水文学与海岸动力学', '港口', '航道', '河口', '海岸',
+                              '生态水利', '水利管理', '水利科技','水利经济']
+        exclusiveIdStart = [name2id[name] for name in exclusiveNameStart]
+        # 所有需要排除的节点
+        exclusives = getExclusiveIds(levelRelUrl, exclusiveIdStart)+exclusiveIdStart
+        exclusives = [id2name[exId] for exId in exclusives]
+
+    # 读入边数据
+    # readRelation(dictRelUrl, relationForArr, relationBackArr, exclusives)
+    # readRelation(levelRelUrl, relationForArr, relationBackArr, exclusives)
+    getAllRel(relationForArr, relationBackArr, exclusives)
+    if useAlgorithms == 0:
+        # 调用度中心性算法
+        result = useDegreeCentrality(relationForArr, relationBackArr)
+    elif useAlgorithms == 1:
+        # 调用pageRank
+        # result = usePageRank2(relationForArr)
+        result = usePageRank2(relationBackArr)
+    else:
+        # 调用leaderRank
+        # G = generateG(relationForArr)
+        G = generateG(relationBackArr)
+        result = leaderrank(G)
+    resultName = [id2name[str(index[0])] for index in result]
+    # getPreAndNextWords(500)
     """
     sortNamesLimit：节点重要性排序
     hypernymSets：上位词map
@@ -362,24 +416,24 @@ if __name__ == '__main__':
     #                         print("-----------111--------------")
 
     # 可添加的词
-    realAttachWords = []
-    for asw in attachWords:
-        if attachWords[asw] > 1:
-            realAttachWords.append(asw)
-    print(realAttachWords)
-    # 同义词整理
-    for snl in sameSets:
-        someSameMeanWords = sameSets[snl]
-        for ssmw in someSameMeanWords:
-            if ssmw in sortNamesLimit:
-                # print(str(snl)+'的同义词是：'+str(ssmw))
-                if ssmw not in sameMeansDict:
-                    sameMeansDict[snl] = [ssmw]
-    print(sameMeansDict)
+    # realAttachWords = []
+    # for asw in attachWords:
+    #     if attachWords[asw] > 1:
+    #         realAttachWords.append(asw)
+    # print(realAttachWords)
+    # # 同义词整理
+    # for snl in sameSets:
+    #     someSameMeanWords = sameSets[snl]
+    #     for ssmw in someSameMeanWords:
+    #         if ssmw in sortNamesLimit:
+    #             # print(str(snl)+'的同义词是：'+str(ssmw))
+    #             if ssmw not in sameMeansDict:
+    #                 sameMeansDict[snl] = [ssmw]
+    # print(sameMeansDict)
     if isSave:
         # 导出路径
-        outputSortWordPath = '../output/java/sortWord.csv'
-        outputSortWordLimitPath = '../output/java/排序词条.csv'
+        outputSortWordPath = '../output/java/sortWord3.csv'
+        outputSortWordLimitPath = '../output/java/排序词条3.csv'
         outputEntytiesPath = '../output/java/entyties'
         outputHypernymPath = '../output/java/hypernym.csv'
         outputHyponymsPath = '../output/java/hyponyms.csv'
@@ -395,11 +449,10 @@ if __name__ == '__main__':
         # saveRelationshipAsId(outputHypernymPath, hypernymSets)
         # saveRelationshipAsId(outputHyponymsPath, hyponymsSets)
         # 3.词典中的下位关系
-        saveRelationship(outputDictHyponymsPath, relationForArr)
+        # saveRelationship(outputDictHyponymsPath, relationForArr)
         # 4.将所有标为词语的词都单独保存
-        saveNodes(outputTermsPath, terms)
-        # 5.保存同义词集
-        saveRelationshipAsId(outputSameMeansPath,sameMeansDict)
+        # saveNodes(outputTermsPath, terms)
+
     if isSaveSomeWords:
         # 5.将实体类都分别保存
         entytiesName = ['水利史', '水利科技']

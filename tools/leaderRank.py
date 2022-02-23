@@ -39,6 +39,7 @@ def leaderrank(graph):
         for n in tempLR.keys():
             error += abs(tempLR[n] - LR[n])
         if error <= 0.000000001:
+        # if error <= 0.1:
             break
         print('当前轮error为：%s'%error)
         LR = tempLR
