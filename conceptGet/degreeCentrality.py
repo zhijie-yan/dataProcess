@@ -202,7 +202,7 @@ def useDegreeCentrality(relationForArr,relationBackArr):
         numInputList[end] = len(relationBackArr[end])
         avgInputList[end] = numInputList[end] / (n - 1)
     for name in namesLexicon:
-        ids = name2id[name]
+        ids = int(name2id[name])
         if ids in avgOutputList and ids in avgInputList:
             allAvg[ids] = avgInputList[ids] + avgOutputList[ids]
         elif ids in avgOutputList:
@@ -344,7 +344,7 @@ isRequestConcepts = False
 isExclusive = True
 isUsePageRank = True
 # 0:degreeCentrality 1:pageRank 2:leaderRank
-useAlgorithms = 2
+useAlgorithms = 0
 isSave = True
 isLimit = True
 isSaveSomeWords = False
@@ -432,8 +432,8 @@ if __name__ == '__main__':
     # print(sameMeansDict)
     if isSave:
         # 导出路径
-        outputSortWordPath = '../output/java/sortWord3.csv'
-        outputSortWordLimitPath = '../output/java/排序词条3.csv'
+        outputSortWordPath = '../output/java/sortWord1.csv'
+        outputSortWordLimitPath = '../output/java/排序词条1.csv'
         outputEntytiesPath = '../output/java/entyties'
         outputHypernymPath = '../output/java/hypernym.csv'
         outputHyponymsPath = '../output/java/hyponyms.csv'
