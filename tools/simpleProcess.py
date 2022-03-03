@@ -13,6 +13,7 @@ sciUrl = '../output/java/水利科技.csv'
 sortUrl = '../output/java/sortWord.csv'
 relUrl = '../output/水利大辞典-关系-词条2定义.csv'
 allRelUrl = '../output/relationships/allRelationships.csv'
+conceptsUrl = '../data/concepts.csv'
 
 outputHisName = '../output/java/水利史-人名.csv'
 outputSciStartName = '../output/java/水利科技-组织机构.csv'
@@ -25,6 +26,9 @@ outputAllRel = '../output/relationships/allRelationshipsIds.csv'
 jsonData = json.load(open(jsonUrl,encoding='utf-8'))
 
 ltp = LTP()
+
+
+
 
 def getCsvData(url):
     """
@@ -143,12 +147,29 @@ if __name__ == '__main__':
         name2id[data['name']] = str(data['id'])
         id2name[str(data['id'])] = data['name']
         name2Definition[data['name']] = data['context']
-        # 数据处理阶段 添加词典
     # 添加自定义字典
-    ltp.add_words(words=namesLexicon)
-    transRelNameToIds(allRelUrl,outputAllRel)
+    # ltp.add_words(words=namesLexicon)
+    # transRelNameToIds(allRelUrl,outputAllRel)
     # transferTerms()
     # getNameFromHistory()
     # getNameFromSci()
     # getSortNames()
+    # 判断水利大辞典中，水利规范的词占多少
+    conceptDatas = getCsvData(conceptsUrl)
+    conceptLen = len(conceptDatas)
+    conceptNotInArr = []
+    nameConcept = []
+    for cdata in conceptDatas:
+        if cdata not in namesLexicon:
+            conceptNotInArr.append(cdata)
+            for name in namesLexicon:
+                if cdata in name:
+                    nameConcept.append([cdata,name])
+                    conceptNotInArr.remove(cdata)
+                    break
+    print('出现比例为:%s'%(len(conceptNotInArr)/conceptLen))
+    print('未出现词汇为：')
+    print(conceptNotInArr)
+    print(nameConcept)
+
 
