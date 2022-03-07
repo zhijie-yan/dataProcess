@@ -19,19 +19,23 @@ from ltp import LTP
 url = '../data/process/水利大辞典-定义-整理数据.json'
 output = '../output/水利大辞典-关系-词条2定义.csv'
 outputMerge = '../output/水利大辞典-关系-一对多关系.csv'
-outputAllRel = '../output/relationships/allRelationships.csv'
+
 
 personSciUrl = '../output/java/水利科技-人名.csv'
 personHisUrl = '../output/java/水利史-人名.csv'
 orgUrl = '../output/java/水利科技-组织机构.csv'
 rivUrl = '../output/java/河流沟渠.csv'
 
-outputSameMeanPath = '../output/relationships/sameMeanRel.csv'
-outputWordInOthPath = '../output/relationships/wordInOtherWords.csv'
-outputTripletPath = '../output/relationships/tripletPath.csv'
-outputSegWordsPath = '../output/relationships/segWords.csv'
-outputNoFindPath = '../output/relationships/noFindWords.csv'
+baseUrl = '../output/最简单提取方案/'
+outputSameMeanPath = baseUrl + 'sameMeanRel.csv'
+outputWordInOthPath = baseUrl + 'wordInOtherWords.csv'
+outputTripletPath = baseUrl + 'tripletPath.csv'
+outputSegWordsPath = baseUrl + 'segWords.csv'
+outputNoFindPath = baseUrl + 'noFindWords.csv'
+outputAllRel = baseUrl + 'allRelationships.csv'
 
+if not os.path.exists(baseUrl):
+    os.mkdir(baseUrl)
 jsonData = json.load(open(url, encoding='utf-8'))
 
 # 读取数据阶段

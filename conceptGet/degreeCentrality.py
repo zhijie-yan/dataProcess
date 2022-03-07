@@ -24,6 +24,7 @@ avgOutPutList：出度平均
 """
 import json
 import csv
+import os
 import re
 
 import networkx as nx
@@ -38,7 +39,7 @@ from tools.wordnetTest import getPreAndNextWord
 from waterDict.extractRelation import getAllRel
 
 
-def readRelation(inputPath,relationForArr,relationBackArr,exclusiveIdStart):
+def readRelation(inputPath,relationForArr,relationBackArr,exclusive):
     """
     由路径，要排除的一级目录名称读出关系
     """
@@ -48,7 +49,7 @@ def readRelation(inputPath,relationForArr,relationBackArr,exclusiveIdStart):
             start = row[0]
             end = row[1]
             # 去自指向
-            if start == end or start in exclusiveIdStart or end in exclusiveIdStart:
+            if start == end or id2name[start] in exclusive or id2name[end] in exclusive:
                 continue
             # 出度
             if start not in relationForArr:
@@ -202,7 +203,8 @@ def useDegreeCentrality(relationForArr,relationBackArr):
         numInputList[end] = len(relationBackArr[end])
         avgInputList[end] = numInputList[end] / (n - 1)
     for name in namesLexicon:
-        ids = int(name2id[name])
+        # ids = int(name2id[name])
+        ids = name2id[name]
         if ids in avgOutputList and ids in avgInputList:
             allAvg[ids] = avgInputList[ids] + avgOutputList[ids]
         elif ids in avgOutputList:
@@ -344,10 +346,11 @@ isRequestConcepts = False
 isExclusive = True
 isUsePageRank = True
 # 0:degreeCentrality 1:pageRank 2:leaderRank
-useAlgorithms = 0
+useAlgorithms = 3
 isSave = True
 isLimit = True
 isSaveSomeWords = False
+useOldExtractRel = True
 
 # 初始化参数
 name2id = {}
@@ -368,7 +371,7 @@ if __name__ == '__main__':
     exclusives = []
     if isExclusive:
         # 排除一些概念
-        exclusiveNameStart = ['地质', '工程力学', '水力学', '河流动力学', '土力学', '岩石力学', '给水排水工程', '海洋水文学与海岸动力学', '港口', '航道', '河口', '海岸',
+        exclusiveNameStart = ['地质', '工程力学', '水力学', '河流动力学', '土力学', '岩石力学', '海洋水文学与海岸动力学', '港口', '航道', '河口', '海岸',
                               '生态水利', '水利管理', '水利科技','水利经济']
         exclusiveIdStart = [name2id[name] for name in exclusiveNameStart]
         # 所有需要排除的节点
@@ -376,20 +379,25 @@ if __name__ == '__main__':
         exclusives = [id2name[exId] for exId in exclusives]
 
     # 读入边数据
-    # readRelation(dictRelUrl, relationForArr, relationBackArr, exclusives)
-    # readRelation(levelRelUrl, relationForArr, relationBackArr, exclusives)
-    getAllRel(relationForArr, relationBackArr, exclusives)
+    if useOldExtractRel:
+        readRelation(dictRelUrl, relationForArr, relationBackArr, exclusives)
+        # readRelation(levelRelUrl, relationForArr, relationBackArr, exclusives)
+    else:
+        getAllRel(relationForArr, relationBackArr, exclusives)
     if useAlgorithms == 0:
         # 调用度中心性算法
         result = useDegreeCentrality(relationForArr, relationBackArr)
     elif useAlgorithms == 1:
         # 调用pageRank
-        # result = usePageRank2(relationForArr)
-        result = usePageRank2(relationBackArr)
-    else:
+        result = usePageRank2(relationForArr)
+        # result = usePageRank2(relationBackArr)
+    elif useAlgorithms == 2:
         # 调用leaderRank
         # G = generateG(relationForArr)
         G = generateG(relationBackArr)
+        result = leaderrank(G)
+    else:
+        G = generateG(relationForArr)
         result = leaderrank(G)
     resultName = [id2name[str(index[0])] for index in result]
     # getPreAndNextWords(500)
@@ -432,8 +440,14 @@ if __name__ == '__main__':
     # print(sameMeansDict)
     if isSave:
         # 导出路径
-        outputSortWordPath = '../output/java/sortWord1.csv'
-        outputSortWordLimitPath = '../output/java/排序词条1.csv'
+        baseUrl = '../output/最简单提取方案/'
+        if not os.path.exists(baseUrl):
+            os.mkdir(baseUrl)
+        jsonData = json.load(open(url, encoding='utf-8'))
+        # outputSortWordPath = baseUrl + 'sortWord3.csv'
+        # outputSortWordLimitPath = baseUrl + '排序词条3.csv'
+        outputSortWordPath = baseUrl + 'sortWord'+str(useAlgorithms)+'.csv'
+        outputSortWordLimitPath = baseUrl + '排序词条'+str(useAlgorithms)+'.csv'
         outputEntytiesPath = '../output/java/entyties'
         outputHypernymPath = '../output/java/hypernym.csv'
         outputHyponymsPath = '../output/java/hyponyms.csv'

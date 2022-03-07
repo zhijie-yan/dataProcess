@@ -19,7 +19,7 @@ outputHisName = '../output/java/水利史-人名.csv'
 outputSciStartName = '../output/java/水利科技-组织机构.csv'
 outputSciEndName = '../output/java/水利科技-人名.csv'
 outputTerms = '../output/java/termIds.csv'
-outputSortWords = '../output/java/排序词条.csv'
+outputSortWords = '../output/java/排序词条0.csv'
 outputRiver = '../output/java/河流沟渠.csv'
 outputAllRel = '../output/relationships/allRelationshipsIds.csv'
 
@@ -147,8 +147,24 @@ if __name__ == '__main__':
         name2id[data['name']] = str(data['id'])
         id2name[str(data['id'])] = data['name']
         name2Definition[data['name']] = data['context']
+
+    test = {}
+    itra = 0
+    for name in namesLexicon:
+        print(itra)
+        itra += 1
+        seg, _ = ltp.seg([name2Definition[name]])
+        test[name],_ = ltp.seg([name2Definition[name]])
     # 添加自定义字典
-    # ltp.add_words(words=namesLexicon)
+    ltp.add_words(words=namesLexicon)
+    itra = 0
+    for name in namesLexicon:
+        print(itra)
+        itra += 1
+        seg,_ = ltp.seg([name2Definition[name]])
+        if len(test[name]) != len(seg):
+            print(name)
+            print(seg)
     # transRelNameToIds(allRelUrl,outputAllRel)
     # transferTerms()
     # getNameFromHistory()
