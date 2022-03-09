@@ -33,6 +33,7 @@ from tools.pageRank2 import pageRank2
 from tools.pageRankTool import pageRank
 from tools.leaderRank import leaderrank
 from tools.requestKGWork import getPreConcept
+from tools.tools import saveNodes
 from tools.wordnetTest import getPreAndNextWord
 
 # 读取边数据
@@ -100,17 +101,6 @@ def saveRelationship(outputPath,relationForArr):
         for rel in relationForArr:
             for val in relationForArr[rel]:
                 f.write(str(rel) + ',' + str(val) + '\n')
-
-def saveNodes(outputPath,nodes):
-    """
-    保存节点list
-    @param outputPath: 输出路径
-    @param nodes: 节点列表
-    @return: 保存
-    """
-    with open(outputPath, 'w', encoding='utf-8', newline='') as f:
-        for node in nodes:
-            f.write(str(node) + '\n')
 
 def saveRelationshipAsId(outputPath,relationships):
     """

@@ -4,7 +4,7 @@
 import csv
 import json
 
-jsonUrl = 'data/process/水利大辞典-定义-整理数据.json'
+jsonUrl = '../data/process/水利大辞典-定义-整理数据.json'
 levelRelUrl = 'data/output/水利大辞典-关系-下位.csv'
 baseUrl = 'output/'
 noExclusiveUrl = '不排除已加入关系/'
@@ -18,6 +18,11 @@ id2name = {}
 name2Definition = {}
 namesLexicon = []
 jsonData = json.load(open(jsonUrl,encoding='utf-8'))
+for data in jsonData:
+    namesLexicon.append(data['name'])
+    name2id[data['name']] = str(data['id'])
+    id2name[str(data['id'])] = data['name']
+    name2Definition[data['name']] = data['context']
 
 nameFather = {}
 # 规范中的词
@@ -86,14 +91,10 @@ def readRel(path):
     return result
 
 if __name__ == '__main__':
-    for data in jsonData:
-        namesLexicon.append(data['name'])
-        name2id[data['name']] = str(data['id'])
-        id2name[str(data['id'])] = data['name']
-        name2Definition[data['name']] = data['context']
-    setScore()
-    nameFather = readRel(levelRelUrl)
-    concepts = readNodes(conceptUrl)
-    evaluate(baseUrl+noExclusiveUrl)
+    pass
+    # setScore()
+    # nameFather = readRel(levelRelUrl)
+    # concepts = readNodes(conceptUrl)
+    # evaluate(baseUrl+noExclusiveUrl)
     # evaluate(baseUrl+exclusiveUrl)
-    evaluate(baseUrl+simpleUrl)
+    # evaluate(baseUrl+simpleUrl)

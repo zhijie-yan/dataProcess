@@ -17,8 +17,8 @@ def edit_distance3(w1, w2):
                                matrix[i - 1][j] + 1,
                                matrix[i][j - 1] + 1)
 
-    print(pd.DataFrame(
-        matrix, index=[''] + list(w1), columns=[''] + list(w2)))
+    # print(pd.DataFrame(
+    #     matrix, index=[''] + list(w1), columns=[''] + list(w2)))
 
     return matrix[-1][-1]
 
@@ -37,9 +37,9 @@ def edit_distance2(w1, w2):
                                matrix[i][j - 1] + 1)
     return matrix[-1][-1] / (l1 / 2 + l2 / 2 - 1)
 
-ed = edit_distance3('通航建筑物', '通船建筑物')
-print('edit_distance:', ed)
-
-
-a, b = '通航建筑物', '通船建筑物'
-print(edit_distance(a, b), edit_distance(a, b, transpositions=True))
+# ed = edit_distance3('通航建筑物', '通船建筑物')
+# print('edit_distance:', ed)
+#
+#
+# a, b = '通航建筑物', '通船建筑物'
+# print(edit_distance(a, b), edit_distance(a, b, transpositions=True))
